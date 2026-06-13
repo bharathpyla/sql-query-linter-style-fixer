@@ -4,7 +4,7 @@ from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 
-# Try to import sqlglot for local syntax validation
+# Try to import sqlglot for local syntax validation and AST refactoring
 try:
     import sqlglot
     HAS_SQLGLOT = True
@@ -53,6 +53,23 @@ def clean_llm_spaces(sql: str) -> str:
     parts.append(clean_segment(code_segment))
     
     return "".join(parts)
+
+def local_refactor_sql(sql: str) -> str:
+    """
+    Performs a local, rule-based structural refactor using sqlglot's AST engine.
+    Pretty-prints the query, standardizes keyword casing, and validates structure.
+    """
+    if not HAS_SQLGLOT:
+        return f"-- Local AST Refactoring skipped (sqlglot package not available).\n\n{sql}"
+        
+    try:
+        # Parse the query using sqlglot
+        parsed = sqlglot.parse_one(sql)
+        # Generate pretty-printed SQL
+        return parsed.sql(pretty=True)
+    except Exception as e:
+        # Return fallback with parsing error commented out
+        return f"-- Local AST Parsing Notice: {e}\n\n{sql}"
 
 def refactor_sql_query(sql: str) -> str:
     """
