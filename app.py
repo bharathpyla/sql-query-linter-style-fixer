@@ -255,65 +255,173 @@ def run_streamlit_ui():
     # Layout Split
     left_col, right_col = st.columns(2)
     
-    # LEFT COLUMN: Directory scan pipeline
+    # LEFT COLUMN: Batch scan / upload pipeline
     with left_col:
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("📂 Local Directory Scan Pipeline")
-        st.write("Process multiple `.sql` queries inside a folder automatically. Results are saved as `*_fixed.sql`.")
+        st.subheader("📂 Batch Optimization Pipeline")
+        st.write("Process multiple `.sql` queries at once using direct file upload or a local directory scan.")
         
-        dir_path = st.text_input(
-            "Target Directory Folder Path:",
-            placeholder="e.g., C:/Users/avina/queries",
-            key="scan_dir_path",
-            help="Specify the absolute folder directory where raw .sql files reside."
-        )
+        # Create tabs for File Upload vs Local Directory scan
+        batch_tab1, batch_tab2 = st.tabs(["📤 File Uploader (Cloud Friendly)", "📂 Directory Scanner (Local dev)"])
         
-        scan_button = st.button("Scan & Optimize Folder", key="scan_dir_btn", use_container_width=True)
-        
-        if scan_button:
-            if not dir_path.strip():
-                st.error("Please provide a valid directory path.")
-            elif not os.path.exists(dir_path):
-                st.error("The specified path does not exist on your filesystem.")
-            elif not api_key:
-                st.error("A Gemini API Key is required for the optimization pipeline. Please set it in the sidebar.")
-            else:
-                with st.spinner("Executing hybrid processing pipeline on folder..."):
-                    try:
-                        results = process_directory(dir_path, api_key)
-                        
-                        if not results:
-                            st.info("No candidate SQL files found in the directory (or all matching queries are already fixed).")
-                        else:
-                            st.success(f"Processing complete! Batch summary below:")
+        with batch_tab1:
+            st.write("Upload `.sql` files directly from your device. Useful when running in isolated cloud containers.")
+            uploaded_files = st.file_uploader(
+                "Upload SQL Files:",
+                type=["sql"],
+                accept_multiple_files=True,
+                key="batch_file_uploader",
+                help="Select one or more .sql files to lint and optimize."
+            )
+            
+            optimize_uploads_btn = st.button("Optimize Uploaded Files", key="optimize_uploads_btn", use_container_width=True)
+            
+            if optimize_uploads_btn:
+                if not uploaded_files:
+                    st.error("Please upload at least one SQL file to process.")
+                else:
+                    st.success(f"Processing {len(uploaded_files)} uploaded files...")
+                    for uploaded_file in uploaded_files:
+                        file_name = uploaded_file.name
+                        try:
+                            # Read uploaded file content in-memory
+                            raw_sql = uploaded_file.read().decode("utf-8")
                             
-                            for res in results:
-                                status_color = "🟢" if res["status"] == "Success" else "🔴"
-                                with st.expander(f"{status_color} {res['file_name']} — {res['status']}", expanded=True):
-                                    if res["status"] == "Success":
-                                        st.write(f"💾 **Output location:** `{res['output_path']}`")
-                                        if res["warnings"]:
-                                            for w in res["warnings"]:
-                                                st.markdown(f'<div class="warning-card">⚠️ {w}</div>', unsafe_allow_html=True)
-                                        
-                                        if res["adjusted"]:
-                                            st.info("🎨 Style adjustments applied! Standardized casing and keywords.")
-                                        elif not res["warnings"]:
-                                            st.success("✅ Clean baseline code: No style violations or select star anti-patterns found.")
-                                    else:
-                                        st.error(f"Failed to process file: {res['error']}")
-                                        error_msg = str(res["error"])
+                            with st.spinner(f"Processing {file_name}..."):
+                                # Run Phase 1
+                                linted_sql, warnings = lint_sql(raw_sql)
+                                
+                                # Run Phase 2
+                                has_error = False
+                                using_local_fallback = False
+                                refactored_sql = ""
+                                
+                                if api_key:
+                                    try:
+                                        os.environ["GEMINI_API_KEY"] = api_key
+                                        refactored_sql = refactor_sql_query(linted_sql)
+                                    except Exception as e:
+                                        error_msg = str(e)
                                         if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
-                                            st.markdown(
-                                                '<div class="warning-card">⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.<br><br>'
-                                                '**How to fix:** Generate a free API key from your own '
-                                                '<a href="https://aistudio.google.com/" target="_blank">Google AI Studio dashboard</a> '
-                                                'and paste it into the <b>Enter Google Gemini API Key</b> '
-                                                'input field in the left sidebar configuration.</div>',
-                                                unsafe_allow_html=True
-                                            )
-                    except Exception as e:
-                        st.error(f"An error occurred during scanning: {e}")
+                                            from llm_agent import local_refactor_sql
+                                            refactored_sql = local_refactor_sql(linted_sql)
+                                            using_local_fallback = True
+                                            st.session_state[f"api_key_error_{file_name}"] = True
+                                        else:
+                                            refactored_sql = f"-- Error executing Phase 2 LLM Agent:\n-- {error_msg}"
+                                            has_error = True
+                                else:
+                                    from llm_agent import local_refactor_sql
+                                    refactored_sql = local_refactor_sql(linted_sql)
+                                    using_local_fallback = True
+                                
+                            status_color = "🔴" if has_error else ("🟡" if using_local_fallback else "🟢")
+                            status_label = "Failed" if has_error else ("Success (Local Mode)" if using_local_fallback else "Success (LLM Mode)")
+                            
+                            with st.expander(f"{status_color} {file_name} — {status_label}", expanded=True):
+                                if has_error:
+                                    st.error(f"Failed to process query: {refactored_sql}")
+                                else:
+                                    # Warnings
+                                    if warnings:
+                                        for w in warnings:
+                                            st.markdown(f'<div class="warning-card">⚠️ {w}</div>', unsafe_allow_html=True)
+                                    
+                                    # Show API key warning if fallback triggered
+                                    if f"api_key_error_{file_name}" in st.session_state:
+                                        st.markdown(
+                                            '<div class="warning-card">ℹ️ **Bypassed Key Error with Local Mode:** The Gemini API key you entered appears to be invalid, expired, or restricted. '
+                                            'Used local rule-based AST pretty-printing instead.</div>',
+                                            unsafe_allow_html=True
+                                        )
+                                        del st.session_state[f"api_key_error_{file_name}"]
+                                        
+                                    st.write("#### Optimized SQL:")
+                                    # st.code allows Copy to clipboard!
+                                    st.code(refactored_sql, language="sql")
+                                    
+                                    # Unified diff comparison
+                                    diff_lines = list(difflib.unified_diff(
+                                        raw_sql.splitlines(),
+                                        refactored_sql.splitlines(),
+                                        fromfile="Raw SQL Input",
+                                        tofile="Optimized Output",
+                                        lineterm=""
+                                    ))
+                                    if diff_lines:
+                                        st.write("#### Changes:")
+                                        diff_text = "\n".join(diff_lines)
+                                        st.markdown(f"```diff\n{diff_text}\n```")
+                                    
+                                    # Provide download button
+                                    download_name = file_name.replace(".sql", "_fixed.sql")
+                                    st.download_button(
+                                        label=f"💾 Download {download_name}",
+                                        data=refactored_sql,
+                                        file_name=download_name,
+                                        mime="text/plain",
+                                        key=f"dl_{file_name}"
+                                    )
+                                    
+                        except Exception as file_err:
+                            st.error(f"Could not read/process file {file_name}: {file_err}")
+                            
+        with batch_tab2:
+            st.write("Process multiple `.sql` queries inside a folder automatically. Results are saved as `*_fixed.sql`.")
+            
+            dir_path = st.text_input(
+                "Target Directory Folder Path:",
+                placeholder="e.g., C:/Users/avina/queries",
+                key="scan_dir_path",
+                help="Specify the absolute folder directory where raw .sql files reside."
+            )
+            
+            scan_button = st.button("Scan & Optimize Folder", key="scan_dir_btn", use_container_width=True)
+            
+            if scan_button:
+                if not dir_path.strip():
+                    st.error("Please provide a valid directory path.")
+                elif not os.path.exists(dir_path):
+                    st.error("The specified path does not exist on your filesystem.")
+                elif not api_key:
+                    st.error("A Gemini API Key is required for the optimization pipeline. Please set it in the sidebar.")
+                else:
+                    with st.spinner("Executing hybrid processing pipeline on folder..."):
+                        try:
+                            results = process_directory(dir_path, api_key)
+                            
+                            if not results:
+                                st.info("No candidate SQL files found in the directory (or all matching queries are already fixed).")
+                            else:
+                                st.success(f"Processing complete! Batch summary below:")
+                                
+                                for res in results:
+                                    status_color = "🟢" if res["status"] == "Success" else "🔴"
+                                    with st.expander(f"{status_color} {res['file_name']} — {res['status']}", expanded=True):
+                                        if res["status"] == "Success":
+                                            st.write(f"💾 **Output location:** `{res['output_path']}`")
+                                            if res["warnings"]:
+                                                for w in res["warnings"]:
+                                                    st.markdown(f'<div class="warning-card">⚠️ {w}</div>', unsafe_allow_html=True)
+                                            
+                                            if res["adjusted"]:
+                                                st.info("🎨 Style adjustments applied! Standardized casing and keywords.")
+                                            elif not res["warnings"]:
+                                                st.success("✅ Clean baseline code: No style violations or select star anti-patterns found.")
+                                        else:
+                                            st.error(f"Failed to process file: {res['error']}")
+                                            error_msg = str(res["error"])
+                                            if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
+                                                st.markdown(
+                                                    '<div class="warning-card">⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.<br><br>'
+                                                    '**How to fix:** Generate a free API key from your own '
+                                                    '<a href="https://aistudio.google.com/" target="_blank">Google AI Studio dashboard</a> '
+                                                    'and paste it into the <b>Enter Google Gemini API Key</b> '
+                                                    'input field in the left sidebar configuration.</div>',
+                                                    unsafe_allow_html=True
+                                                )
+                        except Exception as e:
+                            st.error(f"An error occurred during scanning: {e}")
         st.markdown('</div>', unsafe_allow_html=True)
         
     # RIGHT COLUMN: Sandbox playground
@@ -422,7 +530,8 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                         lineterm=""
                     ))
                     if diff_lines:
-                        st.code("\n".join(diff_lines), language="diff")
+                        diff_text = "\n".join(diff_lines)
+                        st.markdown(f"```diff\n{diff_text}\n```")
                     else:
                         st.info("No modifications detected.")
         st.markdown('</div>', unsafe_allow_html=True)
