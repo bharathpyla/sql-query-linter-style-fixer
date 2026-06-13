@@ -54,11 +54,31 @@ def clean_llm_spaces(sql: str) -> str:
     
     return "".join(parts)
 
+def strip_markdown_artifacts(sql: str) -> str:
+    """
+    Strips common markdown formatting artifacts (like bold/italic asterisks or backticks)
+    from the query string to prevent confusing the model or AST parser.
+    """
+    # Remove markdown code blocks if any
+    sql = re.sub(r"^```[a-zA-Z]*\n?", "", sql)
+    sql = re.sub(r"\n?```$", "", sql)
+    
+    # Remove bold/italic markers around words: e.g. **count** -> count, *user_id* -> user_id
+    # We use lookbehinds and lookaheads to ensure we only strip markers that are standalone wrappers,
+    # avoiding mangling snake_case names like employee_shift_start.
+    sql = re.sub(r'(?<![a-zA-Z0-9_])\*\*([a-zA-Z0-9_]+)\*\*(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])\*([a-zA-Z0-9_]+)\*(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])__([a-zA-Z0-9_]+)__(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])_([a-zA-Z0-9_]+)_(?![a-zA-Z0-9_])', r'\1', sql)
+    
+    return sql.strip()
+
 def local_refactor_sql(sql: str) -> str:
     """
     Performs a local, rule-based structural refactor using sqlglot's AST engine.
     Pretty-prints the query, standardizes keyword casing, and validates structure.
     """
+    sql = strip_markdown_artifacts(sql)
     if not HAS_SQLGLOT:
         return f"-- Local AST Refactoring skipped (sqlglot package not available).\n\n{sql}"
         
@@ -84,6 +104,9 @@ def refactor_sql_query(sql: str) -> str:
     - Validates generated SQL syntax locally.
     - If syntactically invalid, feeds back the parsing error to the LLM to fix.
     """
+    # Clean incoming SQL from any markdown formatting artifacts
+    sql = strip_markdown_artifacts(sql)
+    
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError(
@@ -110,7 +133,42 @@ def refactor_sql_query(sql: str) -> str:
         "6. Preserve the exact business logic and result set structure of the original query.\n"
         "7. Maintain consistent uppercase formatting for standard SQL keywords.\n"
         "8. Do NOT insert spaces around dots (.) or commas (,). Always write table/column aliases compactly (e.g., 'u.user_id' instead of 'u . user_id').\n"
-        "9. Output ONLY valid, raw, executable SQL. Do NOT wrap the query in markdown formatting like ```sql or ```. Do NOT include any explanations, greetings, warnings, or notes in the output. The response must contain nothing but the query itself."
+        "9. Output ONLY valid, raw, executable SQL. Do NOT wrap the query in markdown formatting like ```sql or ```. Do NOT include any explanations, greetings, warnings, or notes in the output. The response must contain nothing but the query itself.\n"
+        "10. Ignore any markdown formatting artifacts, bold/italic markers (like asterisks * or underscores _), or decorative formatting spaces that may be present in the input. Focus strictly on the underlying Abstract Syntax Tree (AST) structure of the query and return clean, raw SQL.\n\n"
+        "Here are reference examples of how to refactor SQL queries correctly:\n\n"
+        "Example 1: Converting implicit comma-joins into modern INNER JOIN syntax with proper lowercase aliases.\n"
+        "Input:\n"
+        "SELECT e.employeeId, s.shiftName\n"
+        "FROM employeeTable e, shiftDetails s\n"
+        "WHERE e.empId = s.employeeId AND e.status = 'ACTIVE';\n\n"
+        "Output:\n"
+        "SELECT\n"
+        "  e.employee_id,\n"
+        "  s.shift_name\n"
+        "FROM employee_table AS e\n"
+        "INNER JOIN shift_details AS s\n"
+        "  ON e.emp_id = s.employee_id\n"
+        "WHERE\n"
+        "  e.status = 'ACTIVE';\n\n"
+        "Example 2: Extracting deep, nested subqueries in SELECT clauses into Common Table Expressions (CTEs) for clarity.\n"
+        "Input:\n"
+        "SELECT u.userName, (SELECT COUNT(1) FROM userRoles ur WHERE ur.userId = u.userId) as roleCount\n"
+        "FROM users u;\n\n"
+        "Output:\n"
+        "WITH role_counts AS (\n"
+        "  SELECT\n"
+        "    user_id,\n"
+        "    COUNT(1) AS role_count\n"
+        "  FROM user_roles\n"
+        "  GROUP BY\n"
+        "    user_id\n"
+        ")\n"
+        "SELECT\n"
+        "  u.user_name,\n"
+        "  COALESCE(rc.role_count, 0) AS role_count\n"
+        "FROM users AS u\n"
+        "LEFT JOIN role_counts AS rc\n"
+        "  ON u.user_id = rc.user_id;\n"
     )
     
     config = types.GenerateContentConfig(
