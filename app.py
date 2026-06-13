@@ -201,15 +201,42 @@ def run_streamlit_ui():
     # Sidebar Setup for Config
     st.sidebar.title("🛠️ Configuration")
     
-    # Always require the user to input their key in the UI
-    api_key = st.sidebar.text_input(
-        "Enter Google Gemini API Key:",
-        type="password",
-        key="api_key_sidebar",
-        help="Required to optimize query architecture and run the Phase 2 LLM Agent."
-    )
+    # Check if the secret key exists in streamlit secrets (for server-side Cloud deployment)
+    api_key = ""
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+            st.sidebar.success("✅ Server-side API Key loaded (one-click demo ready).")
+    except Exception:
+        pass
+        
+    # Check if it exists in local environment variables as a backup
     if not api_key:
-        st.sidebar.warning("⚠️ Phase 2 LLM Refactor requires an API Key.")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if api_key:
+            st.sidebar.success("✅ Environment API Key loaded (one-click demo ready).")
+            
+    # Render input field based on whether secret key was loaded
+    if not api_key:
+        # Fallback to sidebar if secret isn't configured
+        api_key = st.sidebar.text_input(
+            "Enter Google Gemini API Key:",
+            type="password",
+            key="api_key_sidebar",
+            help="Required to optimize query architecture and run the Phase 2 LLM Agent."
+        )
+        if not api_key:
+            st.sidebar.warning("⚠️ Phase 2 LLM Refactor requires an API Key.")
+    else:
+        # If key is loaded from secrets/env, allow an optional override
+        override_key = st.sidebar.text_input(
+            "Gemini API Key (Optional Override):",
+            type="password",
+            key="api_key_sidebar",
+            help="Using the pre-configured server-side key. You can override it with your own key if desired."
+        )
+        if override_key:
+            api_key = override_key
             
     st.sidebar.markdown("""
     ### 🚀 The Multi-Agent Pipeline
