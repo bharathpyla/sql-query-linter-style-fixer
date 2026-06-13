@@ -201,35 +201,15 @@ def run_streamlit_ui():
     # Sidebar Setup for Config
     st.sidebar.title("🛠️ Configuration")
     
-    # Read/Write API Key from Env or Streamlit Secrets
-    env_api_key = os.environ.get("GEMINI_API_KEY", "")
-    secrets_api_key = ""
-    try:
-        if "GEMINI_API_KEY" in st.secrets:
-            secrets_api_key = st.secrets["GEMINI_API_KEY"]
-    except Exception:
-        pass
-        
-    default_api_key = env_api_key or secrets_api_key
-    
-    if default_api_key:
-        st.sidebar.success("✅ Server-side API Key loaded (one-click demo ready).")
-        api_key = st.sidebar.text_input(
-            "Gemini API Key (Optional Override):",
-            value=default_api_key,
-            type="password",
-            key="api_key_sidebar",
-            help="Using the pre-configured server-side key. You can override it with your own key if desired."
-        )
-    else:
-        api_key = st.sidebar.text_input(
-            "Enter Google Gemini API Key:",
-            type="password",
-            key="api_key_sidebar",
-            help="Required to optimize query architecture and run the Phase 2 LLM Agent."
-        )
-        if not api_key:
-            st.sidebar.warning("⚠️ Phase 2 LLM Refactor requires an API Key.")
+    # Always require the user to input their key in the UI
+    api_key = st.sidebar.text_input(
+        "Enter Google Gemini API Key:",
+        type="password",
+        key="api_key_sidebar",
+        help="Required to optimize query architecture and run the Phase 2 LLM Agent."
+    )
+    if not api_key:
+        st.sidebar.warning("⚠️ Phase 2 LLM Refactor requires an API Key.")
             
     st.sidebar.markdown("""
     ### 🚀 The Multi-Agent Pipeline
@@ -297,11 +277,10 @@ def run_streamlit_ui():
                                         error_msg = str(res["error"])
                                         if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
                                             st.markdown(
-                                                '<div class="warning-card">⚠️ **API Key Validation Issue:** The pre-configured '
-                                                'server-side key appears to be expired, restricted, or invalid.<br><br>'
+                                                '<div class="warning-card">⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.<br><br>'
                                                 '**How to fix:** Generate a free API key from your own '
                                                 '<a href="https://aistudio.google.com/" target="_blank">Google AI Studio dashboard</a> '
-                                                'and paste it into the <b>Gemini API Key (Optional Override)</b> '
+                                                'and paste it into the <b>Enter Google Gemini API Key</b> '
                                                 'input field in the left sidebar configuration.</div>',
                                                 unsafe_allow_html=True
                                             )
@@ -353,16 +332,10 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                             # Check if the error is likely due to an invalid/expired key
                             if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
                                 st.session_state["api_key_error_banner"] = (
-                                    "⚠️ **API Key Validation Issue:** Although the application indicates that a "
-                                    "\"Server-side API Key loaded (one-click demo ready)\", the pre-configured key "
-                                    "is currently expired, restricted, or invalid.\n\n"
+                                    "⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.\n\n"
                                     "**How to fix:**\n"
-                                    "Since you can't fix the server-side configuration yourself, you can easily bypass it "
-                                    "by providing your own key:\n"
-                                    "1. Go to the **🛠️ Configuration** panel on the left sidebar of the SQL Query Linter & Style Fixer.\n"
-                                    "2. Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n"
-                                    "3. Paste your newly generated key into the **Gemini API Key (Optional Override)** input field.\n\n"
-                                    "This will route Phase 2 directly through your account and successfully complete the LLM refactoring pipeline."
+                                    "1. Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n"
+                                    "2. Copy the key and paste it into the **Enter Google Gemini API Key** input field in the left sidebar configuration."
                                 )
                 else:
                     refactored_sql = "-- SKIPPED Phase 2 Optimization. (Gemini API Key was not provided in sidebar)"
