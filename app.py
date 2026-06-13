@@ -201,11 +201,26 @@ def run_streamlit_ui():
     # Sidebar Setup for Config
     st.sidebar.title("🛠️ Configuration")
     
-    # Read/Write API Key
+    # Read/Write API Key from Env or Streamlit Secrets
     env_api_key = os.environ.get("GEMINI_API_KEY", "")
-    if env_api_key:
-        st.sidebar.success("✅ GEMINI_API_KEY loaded from Environment")
-        api_key = env_api_key
+    secrets_api_key = ""
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            secrets_api_key = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        pass
+        
+    default_api_key = env_api_key or secrets_api_key
+    
+    if default_api_key:
+        st.sidebar.success("✅ Server-side API Key loaded (one-click demo ready).")
+        api_key = st.sidebar.text_input(
+            "Gemini API Key (Optional Override):",
+            value=default_api_key,
+            type="password",
+            key="api_key_sidebar",
+            help="Using the pre-configured server-side key. You can override it with your own key if desired."
+        )
     else:
         api_key = st.sidebar.text_input(
             "Enter Google Gemini API Key:",
