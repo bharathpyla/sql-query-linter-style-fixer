@@ -53,6 +53,25 @@ def clean_sql_spacing(sql: str) -> str:
     
     return "".join(parts).rstrip()
 
+def strip_markdown_artifacts(sql: str) -> str:
+    """
+    Strips common markdown formatting artifacts (like bold/italic asterisks or backticks)
+    from the query string to prevent confusing the model or AST parser.
+    """
+    # Remove markdown code blocks if any
+    sql = re.sub(r"^```[a-zA-Z]*\n?", "", sql)
+    sql = re.sub(r"\n?```$", "", sql)
+    
+    # Remove bold/italic markers around words: e.g. **count** -> count, *user_id* -> user_id
+    # We use lookbehinds and lookaheads to ensure we only strip markers that are standalone wrappers,
+    # avoiding mangling snake_case names like employee_shift_start.
+    sql = re.sub(r'(?<![a-zA-Z0-9_])\*\*([a-zA-Z0-9_]+)\*\*(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])\*([a-zA-Z0-9_]+)\*(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])__([a-zA-Z0-9_]+)__(?![a-zA-Z0-9_])', r'\1', sql)
+    sql = re.sub(r'(?<![a-zA-Z0-9_])_([a-zA-Z0-9_]+)_(?![a-zA-Z0-9_])', r'\1', sql)
+    
+    return sql.strip()
+
 def lint_sql(sql: str) -> Tuple[str, List[str]]:
     """
     Phase 1: Deterministic Linter Agent
@@ -64,6 +83,7 @@ def lint_sql(sql: str) -> Tuple[str, List[str]]:
         - The formatted SQL query.
         - A list of warning messages (if any).
     """
+    sql = strip_markdown_artifacts(sql)
     pattern = re.compile(
         r'(?P<comment>--.*$|/\*[\s\S]*?\*/)'
         r'|(?P<string>\'(?:\'\'|[^\'])*\'|"(?:""|[^"])*")'
