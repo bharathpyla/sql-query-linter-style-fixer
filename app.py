@@ -334,8 +334,10 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                                 st.session_state["api_key_error_banner"] = (
                                     "⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.\n\n"
                                     "**How to fix:**\n"
-                                    "1. Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n"
-                                    "2. Copy the key and paste it into the **Enter Google Gemini API Key** input field in the left sidebar configuration."
+                                    "Go to the **🛠️ Configuration** panel on the left sidebar of the SQL Query Linter & Style Fixer.\n\n"
+                                    "Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n\n"
+                                    "Paste your newly generated key into the **Enter Google Gemini API Key** input field.\n\n"
+                                    "This will route Phase 2 directly through your account and successfully complete the LLM refactoring pipeline."
                                 )
                 else:
                     refactored_sql = "-- SKIPPED Phase 2 Optimization. (Gemini API Key was not provided in sidebar)"
