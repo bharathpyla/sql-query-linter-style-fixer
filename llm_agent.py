@@ -56,23 +56,11 @@ def refactor_sql_query(sql: str) -> str:
     - Optimize overall structure and performance while preserving business logic.
     - Output raw executable SQL code only (no conversational text or markdown blocks).
     """
-    # 1. Check environment variables
     api_key = os.environ.get("GEMINI_API_KEY")
-    
-    # 2. Try loading from Streamlit secrets (for server-side Cloud deployment)
-    if not api_key:
-        try:
-            import streamlit as st
-            if "GEMINI_API_KEY" in st.secrets:
-                api_key = st.secrets["GEMINI_API_KEY"]
-                os.environ["GEMINI_API_KEY"] = api_key
-        except Exception:
-            pass
-            
     if not api_key:
         raise ValueError(
-            "GEMINI_API_KEY is missing. Please set your GEMINI_API_KEY in the environment "
-            "or configure it in your Streamlit secrets/sidebar."
+            "GEMINI_API_KEY environment variable is missing. "
+            "Please set your GEMINI_API_KEY in the environment or input it in the UI sidebar before running Phase 2."
         )
         
     try:
