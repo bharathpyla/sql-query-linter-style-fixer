@@ -294,6 +294,14 @@ def run_streamlit_ui():
                                             st.success("✅ Clean baseline code: No style violations or select star anti-patterns found.")
                                     else:
                                         st.error(f"Failed to process file: {res['error']}")
+                                        error_msg = str(res["error"])
+                                        if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
+                                            st.markdown(
+                                                '<div class="warning-card">⚠️ **API Key Validation Issue:** The pre-configured '
+                                                'server-side key appears to be expired, restricted, or invalid. Please '
+                                                'configure your own valid key in the sidebar configuration.</div>',
+                                                unsafe_allow_html=True
+                                            )
                     except Exception as e:
                         st.error(f"An error occurred during scanning: {e}")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -335,12 +343,30 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                             os.environ["GEMINI_API_KEY"] = api_key
                             refactored_sql = refactor_sql_query(linted_sql)
                         except Exception as e:
-                            refactored_sql = f"-- Error executing Phase 2 LLM Agent:\n-- {e}"
+                            error_msg = str(e)
+                            refactored_sql = f"-- Error executing Phase 2 LLM Agent:\n-- {error_msg}"
                             has_error = True
+                            
+                            # Check if the error is likely due to an invalid/expired key
+                            if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
+                                st.session_state["api_key_error_banner"] = (
+                                    "⚠️ **API Key Validation Issue:** Although the application indicates that a "
+                                    "\"Server-side API Key loaded (one-click demo ready)\", the pre-configured key "
+                                    "is currently expired, restricted, or invalid.\n\n"
+                                    "**How to fix:** Input your own valid Gemini API key into the "
+                                    "\"Gemini API Key (Optional Override)\" input field under the 🛠️ Configuration "
+                                    "section in the sidebar on the left."
+                                )
                 else:
                     refactored_sql = "-- SKIPPED Phase 2 Optimization. (Gemini API Key was not provided in sidebar)"
                     has_error = True
                 
+                # Render validation banner if error is present
+                if has_error and "api_key_error_banner" in st.session_state:
+                    st.markdown(f'<div class="warning-card">{st.session_state["api_key_error_banner"]}</div>', unsafe_allow_html=True)
+                    # Clean up session state
+                    del st.session_state["api_key_error_banner"]
+                    
                 # Render results tabs
                 tab1, tab2, tab3 = st.tabs(["✨ Optimized Query", "🔍 Phase 1 Linter Report", "📊 Diff Comparison"])
                 
