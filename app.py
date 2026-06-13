@@ -61,12 +61,13 @@ def process_directory(directory_path: str, api_key: str = None) -> List[dict]:
             # Step 1: Run Phase 1 Linter
             linted_sql, warnings = lint_sql(raw_sql)
             
-            # Step 2: Run Phase 2 LLM Optimizer if API key is present
+            # Step 2: Run Phase 2 Optimization (LLM or Local AST fallback)
             if os.environ.get("GEMINI_API_KEY"):
                 refactored_sql = refactor_sql_query(linted_sql)
             else:
-                refactored_sql = linted_sql
-                warnings.append("Skipped Phase 2 optimization: No Gemini API Key configured.")
+                from llm_agent import local_refactor_sql
+                refactored_sql = local_refactor_sql(linted_sql)
+                warnings.append("Phase 2 ran in Local Mode: Pre-formatted with sqlglot AST parsing (No API Key).")
                 
             # Save transformed SQL
             with open(fixed_file_path, "w", encoding="utf-8") as f:
@@ -342,9 +343,10 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                 with st.spinner("Phase 1: Deterministic Linter formatting..."):
                     linted_sql, warnings = lint_sql(raw_sql_input)
                 
-                # Run Phase 2
+                # Run Phase 2 (LLM or Local AST Fallback)
                 refactored_sql = ""
                 has_error = False
+                using_local_fallback = False
                 
                 if api_key:
                     with st.spinner("Phase 2: LLM Refactor agent optimizing..."):
@@ -353,22 +355,27 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                             refactored_sql = refactor_sql_query(linted_sql)
                         except Exception as e:
                             error_msg = str(e)
-                            refactored_sql = f"-- Error executing Phase 2 LLM Agent:\n-- {error_msg}"
-                            has_error = True
-                            
-                            # Check if the error is likely due to an invalid/expired key
+                            # Fallback to local refactor if the LLM fails due to key error
                             if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
+                                from llm_agent import local_refactor_sql
+                                refactored_sql = local_refactor_sql(linted_sql)
+                                using_local_fallback = True
                                 st.session_state["api_key_error_banner"] = (
-                                    "⚠️ **API Key Error:** The Gemini API key you entered appears to be invalid, expired, or restricted.\n\n"
-                                    "**How to fix:**\n"
+                                    "ℹ️ **Bypassed Key Error with Local Mode:** The Gemini API key you entered appears to be invalid, expired, or restricted. "
+                                    "The app automatically bypassed this by using local rule-based `sqlglot` AST pretty-printing.\n\n"
+                                    "**How to fix for LLM refactoring:**\n"
                                     "Go to the **🛠️ Configuration** panel on the left sidebar of the SQL Query Linter & Style Fixer.\n\n"
                                     "Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n\n"
                                     "Paste your newly generated key into the **Enter Google Gemini API Key** input field.\n\n"
                                     "This will route Phase 2 directly through your account and successfully complete the LLM refactoring pipeline."
                                 )
+                            else:
+                                refactored_sql = f"-- Error executing Phase 2 LLM Agent:\n-- {error_msg}"
+                                has_error = True
                 else:
-                    refactored_sql = "-- SKIPPED Phase 2 Optimization. (Gemini API Key was not provided in sidebar)"
-                    has_error = True
+                    from llm_agent import local_refactor_sql
+                    refactored_sql = local_refactor_sql(linted_sql)
+                    using_local_fallback = True
                 
                 # Render validation banner if error is present
                 if has_error and "api_key_error_banner" in st.session_state:
@@ -381,6 +388,10 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                 
                 with tab1:
                     st.write("### Final Refactored SQL Output")
+                    if using_local_fallback:
+                        st.info("ℹ️ **Running in Local Mode:** Refactored using local `sqlglot` AST parsing (No valid API Key detected).")
+                    else:
+                        st.success("✨ **Running in LLM Mode:** Refactored and structurally optimized using `gemini-2.5-flash`.")
                     st.code(refactored_sql, language="sql")
                     if has_error:
                         st.warning("Only Phase 1 formatting could be completed successfully.")
@@ -441,7 +452,7 @@ def run_cli():
     
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("Warning: GEMINI_API_KEY variable is not set. Execution will fall back to Phase 1 only.", file=sys.stderr)
+        print("Warning: GEMINI_API_KEY variable is not set. Running Phase 2 in Local AST Fallback Mode (sqlglot).", file=sys.stderr)
         
     search_path = os.path.join(directory, "*.sql")
     sql_files = glob.glob(search_path)
@@ -470,13 +481,14 @@ def run_cli():
             else:
                 print("    [Success] Phase 1: Local formatting applied successfully.")
                 
-            # Phase 2: LLM Optimization Refactor
+            # Phase 2: Structural Optimization (LLM or Local AST fallback)
             if api_key:
                 print("    [Refactoring] Phase 2: Refactoring with gemini-2.5-flash...")
                 refactored_sql = refactor_sql_query(linted_sql)
             else:
-                print("    [Skipped] Phase 2: Skipped (no API key configured). Saving Phase 1 changes only.")
-                refactored_sql = linted_sql
+                print("    [Local Mode] Phase 2: Applying local AST pretty-printing (No API Key)...")
+                from llm_agent import local_refactor_sql
+                refactored_sql = local_refactor_sql(linted_sql)
                 
             # Save transformed SQL
             fixed_file_name = file_name.replace(".sql", "_fixed.sql")
