@@ -298,8 +298,11 @@ def run_streamlit_ui():
                                         if "API_KEY" in error_msg or "API key" in error_msg or "APIError" in error_msg or "400" in error_msg or "403" in error_msg or "Invalid" in error_msg:
                                             st.markdown(
                                                 '<div class="warning-card">⚠️ **API Key Validation Issue:** The pre-configured '
-                                                'server-side key appears to be expired, restricted, or invalid. Please '
-                                                'configure your own valid key in the sidebar configuration.</div>',
+                                                'server-side key appears to be expired, restricted, or invalid.<br><br>'
+                                                '**How to fix:** Generate a free API key from your own '
+                                                '<a href="https://aistudio.google.com/" target="_blank">Google AI Studio dashboard</a> '
+                                                'and paste it into the <b>Gemini API Key (Optional Override)</b> '
+                                                'input field in the left sidebar configuration.</div>',
                                                 unsafe_allow_html=True
                                             )
                     except Exception as e:
@@ -353,9 +356,13 @@ where e.empId = s.employeeId and e.status = 'ACTIVE';"""
                                     "⚠️ **API Key Validation Issue:** Although the application indicates that a "
                                     "\"Server-side API Key loaded (one-click demo ready)\", the pre-configured key "
                                     "is currently expired, restricted, or invalid.\n\n"
-                                    "**How to fix:** Input your own valid Gemini API key into the "
-                                    "\"Gemini API Key (Optional Override)\" input field under the 🛠️ Configuration "
-                                    "section in the sidebar on the left."
+                                    "**How to fix:**\n"
+                                    "Since you can't fix the server-side configuration yourself, you can easily bypass it "
+                                    "by providing your own key:\n"
+                                    "1. Go to the **🛠️ Configuration** panel on the left sidebar of the SQL Query Linter & Style Fixer.\n"
+                                    "2. Generate a free API key from your own [Google AI Studio dashboard](https://aistudio.google.com/).\n"
+                                    "3. Paste your newly generated key into the **Gemini API Key (Optional Override)** input field.\n\n"
+                                    "This will route Phase 2 directly through your account and successfully complete the LLM refactoring pipeline."
                                 )
                 else:
                     refactored_sql = "-- SKIPPED Phase 2 Optimization. (Gemini API Key was not provided in sidebar)"
