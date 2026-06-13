@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  sql-linter-app:
+    build: .
+    container_name: sql_query_linter_app
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./test_sql:/app/test_sql
+    restart: unless-stopped
