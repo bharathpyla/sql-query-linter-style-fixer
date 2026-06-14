@@ -1,0 +1,1 @@
+select c.customer_name, (select sum(o.total_amount) from orders o where o.customer_id = c.id) as total_spent, (select count(*) from support_tickets s where s.customer_id = c.id and s.status = 'Open') as open_tickets from customers c where c.region = 'South'
