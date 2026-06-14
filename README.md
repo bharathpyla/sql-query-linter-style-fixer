@@ -9,10 +9,10 @@ This tool helps database administrators and developers transform legacy, unforma
 ## 👥 Team Members & Resumes
 * **Team Name**: **TEAM 20**
 * **Team Members**:
-  * **Member 1**: **Penta Satwika** (Reg. No: `23U41A4245`) - Role: Lead Full-Stack Developer & UI Architect
-  * **Member 2**: **Bharath Pyla** (Reg. No: `23U41A0536`) - Role: Backend & Data Processing Engineer
-  * **Member 3**: **Aythi Eswar** (Reg. No: `23U41A0406`) - Role: LLM Prompts & AI Integration Specialist
-  * **Member 4**: **Dadi James** (Reg. No: `24U45A0212`) - Role: Quality Assurance & Documentation Engineer
+  * **Member 1**: **Penta Satwika** (Reg. No: `23U41A4245`) - Role: Lead Streamlit UI & Dashboard Developer
+  * **Member 2**: **Bharath Pyla** (Reg. No: `23U41A0536`) - Role: Core SQL Parser & Spacing Engine Architect
+  * **Member 3**: **Aythi Eswar** (Reg. No: `23U41A0406`) - Role: Gemini LLM Prompt Engineer & AI Architect
+  * **Member 4**: **Dadi James** (Reg. No: `24U45A0212`) - Role: AST Validation Loop & QA Tester
 * **Resumes**: Resumes for all team members are saved in PDF format in the [RESUMES](./RESUMES) folder.
 
 ---
