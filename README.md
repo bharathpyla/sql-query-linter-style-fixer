@@ -14,6 +14,7 @@ This tool helps database administrators and developers transform legacy, unforma
   * **Member 3**: **Aythi Eswar** (Reg. No: `23U41A0406`) - Role: Gemini LLM Prompt Engineer & AI Architect
   * **Member 4**: **Dadi James** (Reg. No: `24U45A0212`) - Role: AST Validation Loop & QA Tester
 * **Resumes**: Resumes for all team members are saved in PDF format in the [RESUMES](./RESUMES) folder.
+* **Demo Video**: Watch our application walkthrough and explanation video on [Loom](https://www.loom.com/share/43389629dc9e486db959f509c08ae45e).
 
 ---
 
