@@ -6,17 +6,6 @@ This tool helps database administrators and developers transform legacy, unforma
 
 ---
 
-## 👥 Team Members & Resumes
-* **Team Name**: **Team 6**
-* **Team Members**:
-  * **Member 1**: **Mummana Akanksha** - Role: Lead Full-Stack Developer & UI Architect
-  * **Member 2**: **Kasireddy Jahnavi** - Role: Backend & Data Processing Engineer
-  * **Member 3**: **Parsha Sri Harshitha** - Role: LLM Prompts & AI Integration Specialist
-  * **Member 4**: **Doddi Harsha Sri** - Role: Quality Assurance & Documentation Engineer
-* **Resumes**: Resumes for all team members are saved in PDF format in the [resumes](./resumes) folder (containing 10th, 12th, and Undergrad CGPA/Percentages)...
-
----
-
 ## 🚀 Key Features
 
 ### 🔍 Phase 1: Local Deterministic Linter
@@ -140,5 +129,15 @@ WHERE
   e.status = 'ACTIVE';
 ```
 
+---
+
+## 👥 Team Members & Resumes
+* **Team Name**: **TEAM 20**
+* **Team Members**:
+  * **Member 1**: **Penta Satwika** (Reg. No: `23U41A4245`) - Role: Lead Full-Stack Developer & UI Architect
+  * **Member 2**: **Bharath Pyla** (Reg. No: `23U41A0536`) - Role: Backend & Data Processing Engineer
+  * **Member 3**: **Aythi Eswar** (Reg. No: `23U41A0406`) - Role: LLM Prompts & AI Integration Specialist
+  * **Member 4**: **Dadi James** (Reg. No: `24U45A0212`) - Role: Quality Assurance & Documentation Engineer
+* **Resumes**: Resumes for all team members are saved in PDF format in the [RESUMES](./RESUMES) folder.
 
 
