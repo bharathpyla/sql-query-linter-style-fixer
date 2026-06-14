@@ -128,3 +128,15 @@ LEFT JOIN role_counts AS rc
 WHERE
   e.status = 'ACTIVE';
 ```
+
+---
+
+## 👥 Team Information
+
+* **Team Name**: **TEAM 20**
+* **Team Members**:
+  1. **PENTA SATWIKA** (Reg. No: `23U41A4245`)
+  2. **BHARATH PYLA** (Reg. No: `23U41A0536`)
+  3. **AYTHI ESWAR** (Reg. No: `23U41A0406`)
+  4. **DADI JAMES** (Reg. No: `24U45A0212`)
+
