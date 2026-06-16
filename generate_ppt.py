@@ -6,13 +6,18 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
-# Premium Dark Cyber/Teal Corporate Theme Palette
-COLOR_BG = RGBColor(11, 19, 36)          # Dark Obsidian/Slate (Sleek deep navy background)
-COLOR_TITLE = RGBColor(248, 250, 252)    # Slate 50 (Crisp off-white for titles)
-COLOR_BODY = RGBColor(203, 213, 225)     # Slate 300 (Light silver-gray for high readability)
-COLOR_ACCENT = RGBColor(34, 211, 238)    # Cyan 400 (Vibrant electric cyan for secondary highlights/accents)
-COLOR_MUTED = RGBColor(100, 116, 139)    # Slate 500 (Muted gray for footnotes and line decorations)
-COLOR_CARD_BG = RGBColor(22, 32, 59)     # Slate 800 (Contrasting background card color)
+# Modern Professional Indigo & Violet Light Theme Palette
+COLOR_BG = RGBColor(248, 250, 252)       # Slate 50 (Crisp, clean light background)
+COLOR_TITLE = RGBColor(15, 23, 42)       # Slate 900 (High-contrast deep slate for main titles)
+COLOR_BODY = RGBColor(51, 65, 85)        # Slate 700 (Clear readable charcoal body text)
+COLOR_ACCENT = RGBColor(79, 70, 229)     # Indigo 600 (Vibrant Royal Indigo for highlights/dividers)
+COLOR_HIGHLIGHT = RGBColor(219, 39, 119) # Pink 600 (Eye-catching fuchsia for team header)
+COLOR_MUTED = RGBColor(100, 116, 139)    # Slate 500 (Muted gray for footers)
+COLOR_CARD_BG = RGBColor(255, 255, 255)  # Pure White background for card layouts
+COLOR_CARD_BORDER = RGBColor(224, 231, 255) # Indigo 100 (Very soft card border color)
+
+COLOR_PROBLEM_ACCENT = RGBColor(239, 68, 68) # Red 500 (Vibrant red accent line for problems)
+COLOR_SUCCESS_ACCENT = RGBColor(16, 185, 129) # Emerald 500 (Vibrant green accent line for advantages/conclusions)
 
 def apply_background(slide):
     background = slide.background
@@ -28,7 +33,7 @@ def add_divider_line(slide, left, top, width, height, color):
     return shape
 
 def add_footer(slide):
-    footer_box = slide.shapes.add_textbox(Inches(0.75), Inches(6.9), Inches(11.83), Inches(0.3))
+    footer_box = slide.shapes.add_textbox(Inches(0.75), Inches(6.95), Inches(11.83), Inches(0.3))
     tf = footer_box.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
@@ -51,39 +56,142 @@ def add_title(slide, text):
     p.font.bold = True
     p.font.color.rgb = COLOR_TITLE
     
-    # Elegant thin neon accent divider line under title
-    add_divider_line(slide, Inches(0.75), Inches(1.3), Inches(11.83), Inches(0.03), COLOR_ACCENT)
+    # Elegant thin royal indigo divider line under title
+    add_divider_line(slide, Inches(0.75), Inches(1.3), Inches(11.83), Inches(0.04), COLOR_ACCENT)
     
     # Add slide footer
     add_footer(slide)
     return title_box
+
+def add_text_card(slide, left, top, width, height, title, desc, accent_color=COLOR_ACCENT):
+    # Rounded rectangle background
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = COLOR_CARD_BG
+    shape.line.color.rgb = COLOR_CARD_BORDER
+    shape.line.width = Pt(1.5)
+    
+    # Left vertical accent line on the card
+    accent = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, Inches(0.12), height)
+    accent.fill.solid()
+    accent.fill.fore_color.rgb = accent_color
+    accent.line.fill.background()
+    
+    # Text box
+    tb = slide.shapes.add_textbox(left + Inches(0.35), top + Inches(0.08), width - Inches(0.55), height - Inches(0.16))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+    p = tf.paragraphs[0]
+    p.text = f"{title}: "
+    p.font.name = 'Segoe UI'
+    p.font.size = Pt(13.5)
+    p.font.bold = True
+    p.font.color.rgb = COLOR_TITLE
+    
+    run = p.add_run()
+    run.text = desc
+    run.font.name = 'Segoe UI'
+    run.font.size = Pt(13)
+    run.font.bold = False
+    run.font.color.rgb = COLOR_BODY
+
+def add_step_card(slide, left, top, width, height, step_num, text, accent_color=COLOR_ACCENT):
+    # Rounded rectangle background
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = COLOR_CARD_BG
+    shape.line.color.rgb = COLOR_CARD_BORDER
+    shape.line.width = Pt(1.5)
+    
+    # Left vertical accent line on the card
+    accent = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, Inches(0.12), height)
+    accent.fill.solid()
+    accent.fill.fore_color.rgb = accent_color
+    accent.line.fill.background()
+    
+    # Step badge text box
+    badge_box = slide.shapes.add_textbox(left + Inches(0.3), top + Inches(0.11), Inches(0.8), height - Inches(0.22))
+    tf_badge = badge_box.text_frame
+    tf_badge.word_wrap = True
+    tf_badge.margin_left = tf_badge.margin_top = tf_badge.margin_right = tf_badge.margin_bottom = 0
+    p_badge = tf_badge.paragraphs[0]
+    p_badge.text = step_num
+    p_badge.font.name = 'Segoe UI'
+    p_badge.font.size = Pt(17)
+    p_badge.font.bold = True
+    p_badge.font.color.rgb = COLOR_ACCENT
+    
+    # Description text box
+    tb = slide.shapes.add_textbox(left + Inches(1.0), top + Inches(0.11), width - Inches(1.15), height - Inches(0.22))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.name = 'Segoe UI'
+    p.font.size = Pt(13)
+    p.font.color.rgb = COLOR_BODY
+
+def add_grid_card(slide, left, top, width, height, title, desc, accent_color=COLOR_ACCENT):
+    # Rounded rectangle background
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = COLOR_CARD_BG
+    shape.line.color.rgb = COLOR_CARD_BORDER
+    shape.line.width = Pt(1.5)
+    
+    # Left vertical accent line on the card
+    accent = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, Inches(0.12), height)
+    accent.fill.solid()
+    accent.fill.fore_color.rgb = accent_color
+    accent.line.fill.background()
+    
+    # Text box
+    tb = slide.shapes.add_textbox(left + Inches(0.35), top + Inches(0.2), width - Inches(0.55), height - Inches(0.4))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+    
+    p = tf.paragraphs[0]
+    p.text = title
+    p.font.name = 'Segoe UI'
+    p.font.size = Pt(16)
+    p.font.bold = True
+    p.font.color.rgb = COLOR_TITLE
+    p.space_after = Pt(8)
+    
+    p2 = tf.add_paragraph()
+    p2.text = desc
+    p2.font.name = 'Segoe UI'
+    p2.font.size = Pt(13)
+    p2.font.color.rgb = COLOR_BODY
 
 def build_presentation():
     prs = Presentation()
     prs.slide_width = Inches(13.33)
     prs.slide_height = Inches(7.5)
     
-    # Slide layouts: index 6 is blank
     blank_layout = prs.slide_layouts[6]
     
     # ----------------------------------------------------
-    # SLIDE 1: Title Slide (Premium Dark landing style)
+    # SLIDE 1: Title Slide (Premium Indigo landing page)
     # ----------------------------------------------------
     slide1 = prs.slides.add_slide(blank_layout)
     apply_background(slide1)
     
-    # Elegant top accent bar
-    add_divider_line(slide1, Inches(0), Inches(0), Inches(13.33), Inches(0.1), COLOR_ACCENT)
+    # Elegant top brand bar
+    add_divider_line(slide1, Inches(0), Inches(0), Inches(13.33), Inches(0.12), COLOR_ACCENT)
     
     # Large Title Box
-    title_box = slide1.shapes.add_textbox(Inches(0.75), Inches(1.5), Inches(11.83), Inches(2.2))
+    title_box = slide1.shapes.add_textbox(Inches(0.75), Inches(1.3), Inches(11.83), Inches(2.2))
     tf = title_box.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
     p1 = tf.paragraphs[0]
     p1.text = "SQL Query Linter & Style Fixer"
     p1.font.name = 'Segoe UI'
-    p1.font.size = Pt(50)
+    p1.font.size = Pt(48)
     p1.font.bold = True
     p1.font.color.rgb = COLOR_TITLE
     
@@ -93,13 +201,22 @@ def build_presentation():
     p2.font.size = Pt(22)
     p2.font.bold = True
     p2.font.color.rgb = COLOR_ACCENT
-    p2.space_before = Pt(12)
+    p2.space_before = Pt(10)
     
-    # Title divider line
-    add_divider_line(slide1, Inches(0.75), Inches(4.0), Inches(11.83), Inches(0.02), COLOR_MUTED)
+    # Team Info Box (Nested inside a gorgeous clean card container)
+    team_card = slide1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.75), Inches(3.9), Inches(11.83), Inches(2.7))
+    team_card.fill.solid()
+    team_card.fill.fore_color.rgb = COLOR_CARD_BG
+    team_card.line.color.rgb = COLOR_CARD_BORDER
+    team_card.line.width = Pt(1.5)
     
-    # Team Info Box
-    team_box = slide1.shapes.add_textbox(Inches(0.75), Inches(4.3), Inches(11.83), Inches(2.5))
+    # Left border highlight on the team card
+    accent_bar = slide1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.75), Inches(3.9), Inches(0.12), Inches(2.7))
+    accent_bar.fill.solid()
+    accent_bar.fill.fore_color.rgb = COLOR_HIGHLIGHT
+    accent_bar.line.fill.background()
+    
+    team_box = slide1.shapes.add_textbox(Inches(1.15), Inches(4.1), Inches(11.23), Inches(2.3))
     tf_team = team_box.text_frame
     tf_team.word_wrap = True
     tf_team.margin_left = tf_team.margin_top = tf_team.margin_right = tf_team.margin_bottom = 0
@@ -109,8 +226,8 @@ def build_presentation():
     p_team_hdr.font.name = 'Segoe UI'
     p_team_hdr.font.size = Pt(13)
     p_team_hdr.font.bold = True
-    p_team_hdr.font.color.rgb = COLOR_ACCENT
-    p_team_hdr.space_after = Pt(8)
+    p_team_hdr.font.color.rgb = COLOR_HIGHLIGHT
+    p_team_hdr.space_after = Pt(6)
     
     members = [
         "Penta Satwika (23U41A4245) - Lead Streamlit UI & Dashboard Developer",
@@ -123,28 +240,46 @@ def build_presentation():
         p_mem = tf_team.add_paragraph()
         p_mem.text = member
         p_mem.font.name = 'Segoe UI'
-        p_mem.font.size = Pt(12.5)
+        p_mem.font.size = Pt(13)
         p_mem.font.color.rgb = COLOR_BODY
         p_mem.space_before = Pt(3)
         
     # ----------------------------------------------------
-    # SLIDE 2: Objective
+    # SLIDE 2: Objective (Beautiful Two-Column Layout)
     # ----------------------------------------------------
     slide2 = prs.slides.add_slide(blank_layout)
     apply_background(slide2)
     add_title(slide2, "Objective")
     
-    content_box2 = slide2.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf2 = content_box2.text_frame
+    # Left Box - Large Styled Summary Card
+    left_card = slide2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.75), Inches(1.8), Inches(5.2), Inches(4.7))
+    left_card.fill.solid()
+    left_card.fill.fore_color.rgb = RGBColor(240, 242, 254)  # Light Indigo Tint
+    left_card.line.color.rgb = COLOR_CARD_BORDER
+    left_card.line.width = Pt(1.5)
+    
+    left_accent = slide2.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.75), Inches(1.8), Inches(0.12), Inches(4.7))
+    left_accent.fill.solid()
+    left_accent.fill.fore_color.rgb = COLOR_ACCENT
+    left_accent.line.fill.background()
+    
+    summary_box = slide2.shapes.add_textbox(Inches(1.15), Inches(2.2), Inches(4.5), Inches(3.9))
+    tf_summary = summary_box.text_frame
+    tf_summary.word_wrap = True
+    tf_summary.margin_left = tf_summary.margin_top = tf_summary.margin_right = tf_summary.margin_bottom = 0
+    p_sum = tf_summary.paragraphs[0]
+    p_sum.text = "To build a robust database utility that automates layout formatting, syntax cleansing, and structural optimization for database development teams by merging client-side deterministic parsers with serverless Large Language Models."
+    p_sum.font.name = 'Segoe UI'
+    p_sum.font.size = Pt(19)
+    p_sum.font.bold = True
+    p_sum.font.color.rgb = COLOR_ACCENT
+    p_sum.line_spacing = 1.3
+    
+    # Right Box - Objectives Bullet points
+    right_box = slide2.shapes.add_textbox(Inches(6.45), Inches(1.8), Inches(6.13), Inches(4.7))
+    tf2 = right_box.text_frame
     tf2.word_wrap = True
     tf2.margin_left = tf2.margin_top = tf2.margin_right = tf2.margin_bottom = 0
-    
-    p2_body = tf2.paragraphs[0]
-    p2_body.text = "To build a robust database utility that automates layout formatting, syntax cleansing, and structural optimization for database development teams by merging client-side deterministic parsers with serverless Large Language Models."
-    p2_body.font.name = 'Segoe UI'
-    p2_body.font.size = Pt(19)
-    p2_body.font.color.rgb = COLOR_BODY
-    p2_body.space_after = Pt(20)
     
     objectives = [
         "Standardize mixed casings (camelCase/PascalCase) into uniform lowercase snake_case.",
@@ -154,53 +289,43 @@ def build_presentation():
         "Secure syntax correctness using an in-memory Abstract Syntax Tree validation loop."
     ]
     
-    for obj in objectives:
-        p_bullet = tf2.add_paragraph()
+    for i, obj in enumerate(objectives):
+        p_bullet = tf2.add_paragraph() if i > 0 else tf2.paragraphs[0]
         p_bullet.text = f"\u2022  {obj}"
         p_bullet.font.name = 'Segoe UI'
         p_bullet.font.size = Pt(15)
         p_bullet.font.color.rgb = COLOR_BODY
-        p_bullet.space_before = Pt(8)
+        p_bullet.space_before = Pt(10)
+        p_bullet.line_spacing = 1.2
         
     # ----------------------------------------------------
-    # SLIDE 3: Problem Statement
+    # SLIDE 3: Problem Statement (Red-Accented Card List)
     # ----------------------------------------------------
     slide3 = prs.slides.add_slide(blank_layout)
     apply_background(slide3)
     add_title(slide3, "Problem Statement")
     
-    content_box3 = slide3.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf3 = content_box3.text_frame
-    tf3.word_wrap = True
-    tf3.margin_left = tf3.margin_top = tf3.margin_right = tf3.margin_bottom = 0
-    
     problems = [
-        "Inconsistent Casing: Mixed naming structures (camelCase, PascalCase, lowercase) create style violations and audit complications.",
-        "Legacy Join Syntax: Extensive usage of implicit comma-joins (e.g., FROM TableA, TableB WHERE A.id = B.id) obscures join pathways and increases maintenance overhead.",
-        "Complex Subquery Nesting: Deeply nested SELECT projections decrease readability and limit database optimizer index lookup performance.",
-        "Cost Inflation: Unrestricted use of SELECT * drives up cloud data processing costs under pay-per-query models.",
-        "Validation Vulnerability: Rule-based linters only clean basic whitespace, whereas raw LLM optimization agents can hallucinate and generate syntactically broken SQL queries."
+        ("Inconsistent Casing", "Mixed naming structures (camelCase, PascalCase, lowercase) create style violations and audit complications."),
+        ("Legacy Join Syntax", "Extensive usage of implicit comma-joins (e.g., FROM TableA, TableB WHERE A.id = B.id) obscures join pathways and increases maintenance overhead."),
+        ("Complex Subquery Nesting", "Deeply nested SELECT projections decrease readability and limit database optimizer index lookup performance."),
+        ("Cost Inflation", "Unrestricted use of SELECT * drives up cloud data processing costs under pay-per-query models."),
+        ("Validation Vulnerability", "Rule-based linters only clean basic whitespace, whereas raw LLM optimization agents can hallucinate and generate syntactically broken SQL queries.")
     ]
     
-    for i, prob in enumerate(problems):
-        p_prob = tf3.add_paragraph() if i > 0 else tf3.paragraphs[0]
-        p_prob.text = f"\u2022  {prob}"
-        p_prob.font.name = 'Segoe UI'
-        p_prob.font.size = Pt(15.5)
-        p_prob.font.color.rgb = COLOR_BODY
-        p_prob.space_after = Pt(12)
+    card_y = 1.8
+    card_h = 0.85
+    card_gap = 0.1
+    for prob_title, prob_desc in problems:
+        add_text_card(slide3, Inches(0.75), Inches(card_y), Inches(11.83), Inches(card_h), prob_title, prob_desc, COLOR_PROBLEM_ACCENT)
+        card_y += card_h + card_gap
         
     # ----------------------------------------------------
-    # SLIDE 4: Technologies Used (With high-contrast layout)
+    # SLIDE 4: Technologies Used (Indigo-Accented Card List)
     # ----------------------------------------------------
     slide4 = prs.slides.add_slide(blank_layout)
     apply_background(slide4)
     add_title(slide4, "Technologies Used")
-    
-    content_box4 = slide4.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf4 = content_box4.text_frame
-    tf4.word_wrap = True
-    tf4.margin_left = tf4.margin_top = tf4.margin_right = tf4.margin_bottom = 0
     
     techs = [
         ("Python", "Core language for deterministic regex compilation, script execution, and API routing."),
@@ -210,70 +335,42 @@ def build_presentation():
         ("difflib", "Native engine used to compile unified diff reports between raw query inputs and optimized outputs.")
     ]
     
-    for i, (tech, desc) in enumerate(techs):
-        p_tech = tf4.add_paragraph() if i > 0 else tf4.paragraphs[0]
-        p_tech.text = f"\u2022  {tech}: "
-        p_tech.font.name = 'Segoe UI'
-        p_tech.font.size = Pt(15.5)
-        p_tech.font.bold = True
-        p_tech.font.color.rgb = COLOR_ACCENT
-        
-        run = p_tech.add_run()
-        run.text = desc
-        run.font.name = 'Segoe UI'
-        run.font.size = Pt(15.5)
-        run.font.bold = False
-        run.font.color.rgb = COLOR_BODY
-        p_tech.space_after = Pt(10)
+    card_y = 1.8
+    card_h = 0.85
+    card_gap = 0.1
+    for tech, desc in techs:
+        add_text_card(slide4, Inches(0.75), Inches(card_y), Inches(11.83), Inches(card_h), tech, desc, COLOR_ACCENT)
+        card_y += card_h + card_gap
         
     # ----------------------------------------------------
-    # SLIDE 5: System Architecture & Workflow
+    # SLIDE 5: System Architecture & Workflow (Sequential Roadmap)
     # ----------------------------------------------------
     slide5 = prs.slides.add_slide(blank_layout)
     apply_background(slide5)
     add_title(slide5, "System Architecture & Workflow")
     
-    content_box5 = slide5.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf5 = content_box5.text_frame
-    tf5.word_wrap = True
-    tf5.margin_left = tf5.margin_top = tf5.margin_right = tf5.margin_bottom = 0
-    
-    p5_hdr = tf5.paragraphs[0]
-    p5_hdr.text = "Sequential Processing Pipeline Layout"
-    p5_hdr.font.name = 'Segoe UI'
-    p5_hdr.font.size = Pt(17)
-    p5_hdr.font.bold = True
-    p5_hdr.font.color.rgb = COLOR_ACCENT
-    p5_hdr.space_after = Pt(16)
-    
     flow_steps = [
-        "1. Query Input -> Sandbox Area, File Uploader, or CLI batch scanner reads statement.",
-        "2. Input Sanitization -> strip_markdown_artifacts() strips code blocks, bold asterisks, and italic underscores safely.",
-        "3. Phase 1 Linter -> Deterministic capitalization of standard keywords, regex-based conversion of camelCase to snake_case, and SELECT * diagnostic checks.",
-        "4. Phase 2 Refactor -> gemini-2.5-flash receives baseline formatting and optimizes syntax structures (implicit joins to explicit joins, subqueries to CTEs).",
-        "5. Self-Correction Loop -> Output SQL is evaluated by local parser. If syntax errors occur, the traceback is fed back to the LLM to self-heal (up to 3 iterations).",
-        "6. Finalization -> Renders refactored SQL inside copyable st.code frames and outputs colored diff blocks."
+        ("01", "Query Input -> Sandbox Area, File Uploader, or CLI batch scanner reads statement."),
+        ("02", "Input Sanitization -> strip_markdown_artifacts() strips code blocks, bold asterisks, and italic underscores safely."),
+        ("03", "Phase 1 Linter -> Deterministic capitalization of standard keywords, regex-based conversion of camelCase to snake_case, and SELECT * diagnostic checks."),
+        ("04", "Phase 2 Refactor -> gemini-2.5-flash receives baseline formatting and optimizes syntax structures (implicit joins to explicit joins, subqueries to CTEs)."),
+        ("05", "Self-Correction Loop -> Output SQL is evaluated by local parser. If syntax errors occur, the traceback is fed back to the LLM to self-heal (up to 3 iterations)."),
+        ("06", "Finalization -> Renders refactored SQL inside copyable st.code frames and outputs colored diff blocks.")
     ]
     
-    for step in flow_steps:
-        p_step = tf5.add_paragraph()
-        p_step.text = step
-        p_step.font.name = 'Segoe UI'
-        p_step.font.size = Pt(14)
-        p_step.font.color.rgb = COLOR_BODY
-        p_step.space_after = Pt(8)
+    card_y = 1.8
+    card_h = 0.70
+    card_gap = 0.1
+    for step_num, text in flow_steps:
+        add_step_card(slide5, Inches(0.75), Inches(card_y), Inches(11.83), Inches(card_h), step_num, text, COLOR_ACCENT)
+        card_y += card_h + card_gap
         
     # ----------------------------------------------------
-    # SLIDE 6: Modules Overview
+    # SLIDE 6: Modules Overview (Vibrant Vertical Card Layout)
     # ----------------------------------------------------
     slide6 = prs.slides.add_slide(blank_layout)
     apply_background(slide6)
     add_title(slide6, "Modules Overview")
-    
-    content_box6 = slide6.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf6 = content_box6.text_frame
-    tf6.word_wrap = True
-    tf6.margin_left = tf6.margin_top = tf6.margin_right = tf6.margin_bottom = 0
     
     modules = [
         ("Sanitization & Cleaning Module", "Contains lookbehind/lookahead regular expressions that clean styling artifacts from incoming text without corrupting snake_case columns."),
@@ -283,33 +380,19 @@ def build_presentation():
         ("Interface & Download Module", "Manages dual Streamlit and CLI interfaces, in-memory uploads, diff blocks rendering, and download actions.")
     ]
     
-    for i, (mod, desc) in enumerate(modules):
-        p_mod = tf6.add_paragraph() if i > 0 else tf6.paragraphs[0]
-        p_mod.text = f"\u2022  {mod}: "
-        p_mod.font.name = 'Segoe UI'
-        p_mod.font.size = Pt(15)
-        p_mod.font.bold = True
-        p_mod.font.color.rgb = COLOR_ACCENT
-        
-        run = p_mod.add_run()
-        run.text = desc
-        run.font.name = 'Segoe UI'
-        run.font.size = Pt(15)
-        run.font.bold = False
-        run.font.color.rgb = COLOR_BODY
-        p_mod.space_after = Pt(10)
+    card_y = 1.8
+    card_h = 0.85
+    card_gap = 0.1
+    for mod_title, mod_desc in modules:
+        add_text_card(slide6, Inches(0.75), Inches(card_y), Inches(11.83), Inches(card_h), mod_title, mod_desc, COLOR_ACCENT)
+        card_y += card_h + card_gap
         
     # ----------------------------------------------------
-    # SLIDE 7: Advantages
+    # SLIDE 7: Project Advantages (Dynamic 2x2 Grid Card Layout)
     # ----------------------------------------------------
     slide7 = prs.slides.add_slide(blank_layout)
     apply_background(slide7)
     add_title(slide7, "Project Advantages")
-    
-    content_box7 = slide7.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf7 = content_box7.text_frame
-    tf7.word_wrap = True
-    tf7.margin_left = tf7.margin_top = tf7.margin_right = tf7.margin_bottom = 0
     
     advs = [
         ("Cost-Efficiency", "Capitalization and casing rules run locally at zero token cost, conserving expensive LLM API bandwidth for semantic restructuring tasks."),
@@ -318,41 +401,48 @@ def build_presentation():
         ("Pipeline Integration", "Dual CLI and web dashboard structure allows the tool to fit seamlessly into single-query debugging sessions or automated Git pre-commit hooks.")
     ]
     
-    for i, (adv, desc) in enumerate(advs):
-        p_adv = tf7.add_paragraph() if i > 0 else tf7.paragraphs[0]
-        p_adv.text = f"\u2022  {adv}: "
-        p_adv.font.name = 'Segoe UI'
-        p_adv.font.size = Pt(15.5)
-        p_adv.font.bold = True
-        p_adv.font.color.rgb = COLOR_ACCENT
-        
-        run = p_adv.add_run()
-        run.text = desc
-        run.font.name = 'Segoe UI'
-        run.font.size = Pt(15.5)
-        run.font.bold = False
-        run.font.color.rgb = COLOR_BODY
-        p_adv.space_after = Pt(12)
-        
+    # 2x2 grid positioning
+    add_grid_card(slide7, Inches(0.75), Inches(1.8), Inches(5.7), Inches(2.2), advs[0][0], advs[0][1], COLOR_SUCCESS_ACCENT)
+    add_grid_card(slide7, Inches(6.88), Inches(1.8), Inches(5.7), Inches(2.2), advs[1][0], advs[1][1], COLOR_SUCCESS_ACCENT)
+    add_grid_card(slide7, Inches(0.75), Inches(4.2), Inches(5.7), Inches(2.2), advs[2][0], advs[2][1], COLOR_SUCCESS_ACCENT)
+    add_grid_card(slide7, Inches(6.88), Inches(4.2), Inches(5.7), Inches(2.2), advs[3][0], advs[3][1], COLOR_SUCCESS_ACCENT)
+    
     # ----------------------------------------------------
-    # SLIDE 8: Conclusion
+    # SLIDE 8: Conclusion (Beautiful Two-Column Layout)
     # ----------------------------------------------------
     slide8 = prs.slides.add_slide(blank_layout)
     apply_background(slide8)
     add_title(slide8, "Conclusion")
     
-    content_box8 = slide8.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(11.83), Inches(4.8))
-    tf8 = content_box8.text_frame
+    # Left Box - Large Styled Conclusion Statement Card
+    left_card8 = slide8.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.75), Inches(1.8), Inches(5.2), Inches(4.7))
+    left_card8.fill.solid()
+    left_card8.fill.fore_color.rgb = RGBColor(236, 253, 245)  # Soft Emerald Tint
+    left_card8.line.color.rgb = COLOR_CARD_BORDER
+    left_card8.line.width = Pt(1.5)
+    
+    left_accent8 = slide8.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.75), Inches(1.8), Inches(0.12), Inches(4.7))
+    left_accent8.fill.solid()
+    left_accent8.fill.fore_color.rgb = COLOR_SUCCESS_ACCENT
+    left_accent8.line.fill.background()
+    
+    concl_box = slide8.shapes.add_textbox(Inches(1.15), Inches(2.2), Inches(4.5), Inches(3.9))
+    tf_concl = concl_box.text_frame
+    tf_concl.word_wrap = True
+    tf_concl.margin_left = tf_concl.margin_top = tf_concl.margin_right = tf_concl.margin_bottom = 0
+    p_concl = tf_concl.paragraphs[0]
+    p_concl.text = "The SQL Query Linter & Style Fixer successfully bridges the gap between rule-based style cleaners and AI-driven semantic query model refactoring."
+    p_concl.font.name = 'Segoe UI'
+    p_concl.font.size = Pt(20)
+    p_concl.font.bold = True
+    p_concl.font.color.rgb = COLOR_SUCCESS_ACCENT
+    p_concl.line_spacing = 1.3
+    
+    # Right Box - Conclusion points list
+    right_box8 = slide8.shapes.add_textbox(Inches(6.45), Inches(1.8), Inches(6.13), Inches(4.7))
+    tf8 = right_box8.text_frame
     tf8.word_wrap = True
     tf8.margin_left = tf8.margin_top = tf8.margin_right = tf8.margin_bottom = 0
-    
-    p8_body = tf8.paragraphs[0]
-    p8_body.text = "The SQL Query Linter & Style Fixer successfully bridges the gap between rule-based style cleaners and AI-driven semantic query model refactoring."
-    p8_body.font.name = 'Segoe UI'
-    p8_body.font.size = Pt(19)
-    p8_body.font.bold = True
-    p8_body.font.color.rgb = COLOR_ACCENT
-    p8_body.space_after = Pt(20)
     
     points = [
         "Optimizes developer workflow speed and audit readiness for legacy SQL codebases.",
@@ -361,13 +451,14 @@ def build_presentation():
         "Provides a cloud-deployable dashboard and automated CLI script to accommodate any integration pipeline environment."
     ]
     
-    for pt in points:
-        p_pt = tf8.add_paragraph()
+    for i, pt in enumerate(points):
+        p_pt = tf8.add_paragraph() if i > 0 else tf8.paragraphs[0]
         p_pt.text = f"\u2022  {pt}"
         p_pt.font.name = 'Segoe UI'
         p_pt.font.size = Pt(15)
         p_pt.font.color.rgb = COLOR_BODY
-        p_pt.space_before = Pt(8)
+        p_pt.space_before = Pt(10)
+        p_pt.line_spacing = 1.2
         
     prs.save("Presentation.pptx")
     print("Presentation saved successfully.")
