@@ -7,7 +7,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
 # Modern Professional Indigo & Violet Light Theme Palette
-COLOR_BG = RGBColor(230, 237, 246)       # Soft Sky/Ice Blue canvas background (dullness fix)
+COLOR_BG = RGBColor(250, 248, 245)       # Warm Alabaster/Cream background (Theme 1)
 COLOR_TITLE = RGBColor(15, 23, 42)       # Slate 900 (High-contrast deep slate for main titles)
 COLOR_BODY = RGBColor(51, 65, 85)        # Slate 700 (Clear readable charcoal body text)
 COLOR_ACCENT = RGBColor(79, 70, 229)     # Indigo 600 (Vibrant Royal Indigo for highlights/dividers)
@@ -254,7 +254,7 @@ def build_presentation():
     # Left Box - Large Styled Summary Card
     left_card = slide2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.75), Inches(1.8), Inches(5.2), Inches(4.7))
     left_card.fill.solid()
-    left_card.fill.fore_color.rgb = RGBColor(215, 226, 250)  # Rich soft Indigo/Blue tint
+    left_card.fill.fore_color.rgb = RGBColor(240, 242, 254)  # Light Indigo Tint (Theme 1)
     left_card.line.color.rgb = COLOR_CARD_BORDER
     left_card.line.width = Pt(1.5)
     
@@ -417,7 +417,7 @@ def build_presentation():
     # Left Box - Large Styled Conclusion Statement Card
     left_card8 = slide8.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.75), Inches(1.8), Inches(5.2), Inches(4.7))
     left_card8.fill.solid()
-    left_card8.fill.fore_color.rgb = RGBColor(209, 250, 229)  # Rich soft Emerald/Green tint
+    left_card8.fill.fore_color.rgb = RGBColor(236, 253, 245)  # Soft Emerald Tint (Theme 1)
     left_card8.line.color.rgb = COLOR_CARD_BORDER
     left_card8.line.width = Pt(1.5)
     
