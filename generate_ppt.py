@@ -6,18 +6,18 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
-# Premium Dark Cyber-Glow Tech Theme Palette
-COLOR_BG = RGBColor(11, 15, 26)          # Obsidian Midnight Space (#0B0F1A)
-COLOR_TITLE = RGBColor(255, 255, 255)    # Pure White
-COLOR_BODY = RGBColor(191, 219, 254)     # Muted Ice Blue for text readability (#BFD2FE)
-COLOR_ACCENT = RGBColor(6, 182, 212)     # Electric Neon Cyan (#06B6D4)
-COLOR_HIGHLIGHT = RGBColor(139, 92, 246) # Glowing Violet/Purple (#8B5CF6)
-COLOR_MUTED = RGBColor(90, 107, 140)     # Muted Slate Blue for line decors/footers (#5A6B8C)
-COLOR_CARD_BG = RGBColor(20, 26, 43)     # Deep Navy Slate Card (#141A2B)
-COLOR_CARD_BORDER = RGBColor(38, 48, 79) # Cobalt Slate Border (#26304F)
+# Premium Champagne Executive Light Theme Palette
+COLOR_BG = RGBColor(250, 245, 235)       # Luxury Champagne Cream (#FAF5EB)
+COLOR_TITLE = RGBColor(15, 23, 42)       # Slate 900 (High-contrast deep slate for main titles)
+COLOR_BODY = RGBColor(71, 85, 105)       # Slate 600 (Clear readable charcoal body text)
+COLOR_ACCENT = RGBColor(197, 160, 89)    # Matte Gold (#C5A059) for highlights/dividers
+COLOR_HIGHLIGHT = RGBColor(79, 70, 229)  # Deep Royal Indigo (#4F46E5) for badge highlights
+COLOR_MUTED = RGBColor(140, 130, 115)    # Warm Gray for footers/details (#8C8273)
+COLOR_CARD_BG = RGBColor(255, 255, 255)  # Pure White background for card layouts
+COLOR_CARD_BORDER = RGBColor(224, 218, 204) # Warm Gray/Gold border color
 
-COLOR_PROBLEM_ACCENT = RGBColor(244, 63, 94) # Hot Magenta/Red (#F43F5E) for problems
-COLOR_SUCCESS_ACCENT = RGBColor(16, 185, 129) # Vibrant Emerald Green (#10B981) for advantages/conclusions
+COLOR_PROBLEM_ACCENT = RGBColor(225, 29, 72) # Ruby Red (#E11D48) for problems
+COLOR_SUCCESS_ACCENT = RGBColor(16, 185, 129) # Emerald Green (#10B981) for advantages/conclusions
 
 def apply_background(slide):
     background = slide.background
